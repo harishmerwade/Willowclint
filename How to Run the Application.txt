@@ -1,0 +1,174 @@
+How to Run the Application
+Create a virtual environment (recommended):
+
+bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+Install dependencies:
+
+bash
+pip install -r requirements.txt
+Run the application:
+
+bash
+python app.py
+Access the application at http://localhost:5000
+
+Worldwide Deployment Using Your Desktop as Storage
+To deploy your Willow Clint platform worldwide while using your desktop as storage, we'll need a solution that:
+
+Makes your local server accessible worldwide
+
+Maintains your existing local storage setup
+
+Is completely free
+
+Best Solution: Cloudflare Tunnel (Free Tier)
+Why Cloudflare Tunnel?
+
+Makes your localhost accessible worldwide
+
+Uses your existing desktop storage
+
+Free tier is generous (no bandwidth limits)
+
+Includes free SSL certificate
+
+Provides DDoS protection
+
+Step-by-Step Implementation
+1. Install Required Software
+First, install these on your desktop:
+
+bash
+# Install Cloudflare CLI (on your desktop)
+npm install -g cloudflared
+2. Create Cloudflare Account
+Go to Cloudflare and sign up
+
+Add a domain (you can get a free one from Freenom or use a subdomain from Cloudflare)
+
+3. Set Up Cloudflare Tunnel
+Run these commands in your terminal:
+
+bash
+# Authenticate with Cloudflare
+cloudflared tunnel login
+
+# Create a new tunnel
+cloudflared tunnel create willow-clint
+
+# This will generate a tunnel ID - note it down
+4. Configure the Tunnel
+Create a configuration file config.yml in your project directory:
+
+yaml
+tunnel: YOUR_TUNNEL_ID
+credentials-file: /path/to/credentials.json
+
+ingress:
+  - hostname: willow-clint.yourdomain.com
+    service: http://localhost:5000
+  - service: http_status:404
+5. Run Both Your App and Tunnel
+First terminal (run your Flask app):
+
+bash
+python app.py
+Second terminal (run the tunnel):
+
+bash
+cloudflared tunnel --config config.yml run willow-clint
+6. Set Up DNS
+In your Cloudflare dashboard:
+
+Go to DNS settings
+
+Create a CNAME record pointing to your tunnel:
+
+Type: CNAME
+Name: willow-clint
+Target: YOUR_TUNNEL_ID.cfargotunnel.com
+Proxy status: Proxied (orange cloud)
+7. Keep It Running Constantly
+To ensure 24/7 availability:
+
+Use tmux or screen to keep sessions running
+
+Or create system services (more advanced)
+
+For Windows:
+
+powershell
+# Create a scheduled task to run at startup
+$action = New-ScheduledTaskAction -Execute "python" -Argument "app.py"
+$trigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName "WillowClintApp" -Action $action -Trigger $trigger
+Alternative Solution: Ngrok (Simpler but Limited)
+If Cloudflare seems complex, you can use Ngrok's free tier:
+
+bash
+# Install ngrok (https://ngrok.com/download)
+ngrok http 5000
+Limitations:
+
+Free tier has random URLs that change each time
+
+Limited concurrent connections
+
+Bandwidth restrictions
+
+Important Security Considerations
+Add Authentication:
+Modify your app.py to add basic auth for the upload page:
+
+python
+from flask_httpauth import HTTPBasicAuth
+
+auth = HTTPBasicAuth()
+
+users = {
+    "admin": "your-strong-password"
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and users[username] == password:
+        return username
+
+@app.route('/upload')
+@auth.login_required
+def upload():
+    # existing code
+Firewall Configuration:
+
+Ensure your desktop firewall allows incoming connections on port 5000
+
+On Windows: Allow Python through Windows Defender Firewall
+
+On Mac/Linux: Configure appropriate ufw or iptables rules
+
+Monitor Resource Usage:
+
+Your desktop will need to stay powered on
+
+Consider bandwidth limitations of your home internet connection
+
+Maintenance Tips
+Auto-restart on crashes:
+Use a process manager like PM2 (even for Python apps):
+
+bash
+npm install -g pm2
+pm2 start "python app.py" --name willow-clint
+pm2 save
+pm2 startup
+Logs Monitoring:
+Check logs regularly with:
+
+bash
+pm2 logs willow-clint
+# or
+journalctl -u your-service-name -f
+Would you like me to provide more specific instructions for any particular step or explain how to set up automatic thumbnail generation with this deployment method?
+

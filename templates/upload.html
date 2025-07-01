@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Upload Videos</h2>
+    <p>You can upload up to 15 videos at a time. All videos will be unlisted.</p>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="videos">Select videos to upload:</label>
+            <input type="file" id="videos" name="videos" multiple accept="video/*">
+        </div>
+        <button type="submit" class="btn">Upload</button>
+    </form>
+    
+    {% if video_links %}
+    <div class="upload-results">
+        <h3>Upload Successful!</h3>
+        <p>Here are your video links (copy and share):</p>
+        <ul>
+            {% for video in video_links %}
+            <li>
+                <strong>{{ video.original_name }}</strong><br>
+                <a href="{{ video.video_url }}" target="_blank">{{ video.video_url }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
